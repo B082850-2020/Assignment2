@@ -20,7 +20,8 @@ def yes_no(answer):
 			return False
 		else:
 			print ("\n Please respond with 'yes' or 'no' \n")
-			choice = input("yes or no?")
+			choice = input(" yes or no?").lower()
+
 
 def search(protein,taxon,partial) :
 	import string
@@ -29,6 +30,7 @@ def search(protein,taxon,partial) :
         	
 	elif len(taxon)==0 or str.isspace(taxon):
         	print("\n Sorry, no taxon was chosen, please try again..\n")
+        	
 	elif yes_no(partial):
 		print("\n Protein sequences searching for:\n\tProtein:",protein,"\n\tTaxon:",taxon,"\n\tPartial: Yes")
 		file_name = ''.join(i for i in taxon if i.isalnum())
@@ -45,33 +47,29 @@ def search(protein,taxon,partial) :
 		if int(seq_number) == 0:
 			print("\n Sorry, no sequence was found! Likely spelling mistakes. Please try again. Thank you! \n")
 		else:
-			print(str(seq_number.decode('ascii')))
 			print("\n "+ str(seq_number.decode('ascii').rstrip()) +" sequences was found! Nice choice! Downloading sequences...\n\n Please wait... \n")
 			ef = es + "|efetch -db protein -format fasta >"+ file_name +".nuc.fa"
 			subprocess.call(ef,shell=True)
 			file_contents = open(file_name + ".nuc.fa").read()
 			count = file_contents.count('>')
 
-			if count == 0:
-				print (" Something went wrong.. No sequence was retrived. Did you put the right taxon name? ")
-			else:
-				spe = set(re.findall('\[.*?\]',file_contents))
-				print ("\n " + str(count) + " protein sequences successfully retrived! Protein sequences are saved in " \
-				+ file_name +".nuc.fa \n" )
+			spe = set(re.findall('\[.*?\]',file_contents))
+			print ("\n " + str(count) + " protein sequences successfully retrived! Protein sequences are saved in " \
+			+ file_name +".nuc.fa \n" )
 
-				if len(spe) >1:
-					print("\n Sequences are from " + str(len(spe)) + " different species. Do you really wish to continue? \n")
-					answer = input(" yes or no?")
-					if yes_no(answer):
-						quit()	
-					elif yes_no(answer)==False:
-						print("Thank you! Bye!")
-						quit()
-				else:
+			if len(spe) >1:
+				print("\n Sequences are from " + str(len(spe)) + " different species. Do you really wish to continue? \n")
+				answer = input(" yes or no?")
+				if yes_no(answer):
+					quit()	
+				elif yes_no(answer)==False:
+					print("Thank you! Bye!")
 					quit()
+			else:
+				quit()
 			
 
-	elif yes_no(partial)==False:
+	else:
 		print("\n Protein sequences searching for:\n\tProtein:",protein,"\n\tTaxon:",taxon,"\n\tPartial: No")
 		file_name = ''.join(i for i in taxon if i.isalnum())
 		es = "esearch -db protein -query \" "+ taxon +" AND "+ protein + "Not partial" + " \" " 
