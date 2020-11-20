@@ -34,7 +34,7 @@ def search(protein,taxon,partial) :
 	elif yes_no(partial):
 		print("\n Protein sequences searching for:\n\tProtein:",protein,"\n\tTaxon:",taxon,"\n\tPartial: Yes")
 		file_name = ''.join(i for i in taxon if i.isalnum())
-		es = "esearch -db protein -query \" "+ taxon +" AND "+ protein + " \" "
+		es = "esearch -db protein -query \" "+ taxon +" AND "+ protein + " \" -sort \"Organism Name\" "
 		es_number = "esearch -db protein -query \" "+ taxon +" AND "+ protein + " \" "+ \
         	"|grep -i \"count\"|awk \'{split($0,a,\"<|>\");print a[3];}\'"
 		print("\n This is what I am going to run for you \n\n " + es + "\n\n Please wait... \n")
