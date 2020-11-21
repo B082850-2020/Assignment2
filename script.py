@@ -47,21 +47,29 @@ def search(protein,taxon,partial) :
 		if int(seq_number) == 0:
 			print("\n Sorry, no sequence was found! Likely spelling mistakes. Please try again. Thank you! \n")
 		else:
-			print("\n "+ str(seq_number.decode('ascii').rstrip()) +" sequences was found! Nice choice! Downloading sequences...\n\n Please wait... \n")
+			print("\n------\n "+ str(seq_number.decode('ascii').rstrip()) +" sequences was found! Nice choice! \n\n Downloading sequences...\n\n Please wait... \n")
 			ef = es + "|efetch -db protein -format fasta >"+ file_name +".nuc.fa"
 			subprocess.call(ef,shell=True)
 			file_contents = open(file_name + ".nuc.fa").read()
 			count = file_contents.count('>')
 
-			spe = set(re.findall('\[.*?\]',file_contents))
-			print ("\n " + str(count) + " protein sequences successfully retrived! Protein sequences are saved in " \
+			spe = list(set(re.findall('\[.*?\]',file_contents)))
+			print ("\n------\n " + str(count) + " protein sequences successfully retrived! Protein sequences are saved in " \
 			+ file_name +".nuc.fa \n" )
 
 			if len(spe) >1:
 				print("\n Sequences are from " + str(len(spe)) + " different species. Do you really wish to continue? \n")
 				answer = input(" yes or no?")
 				if yes_no(answer):
-					quit()	
+					lines = open(file_name + ".nuc.fa").readlines()
+					for line in lines:
+						for i in range(len(spe)):
+							if spe[i] in line:
+								acc = str(re.findall("^>\w*..",line)).strip("['>']")
+								files = ''.join(a for a in spe[i] if a.isalnum())
+								shell = "seqkit grep -r -p " + acc +" " + file_name + ".nuc.fa >>" + files + ".fa"
+								subprocess.call(shell, shell=True)
+						
 				elif yes_no(answer)==False:
 					print("Thank you! Bye!")
 					quit()
