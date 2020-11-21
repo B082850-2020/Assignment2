@@ -52,25 +52,33 @@ def search(protein,taxon,partial) :
 			subprocess.call(ef,shell=True)
 			file_contents = open(file_name + ".nuc.fa").read()
 			count = file_contents.count('>')
-
-			spe = list(set(re.findall('\[.*?\]',file_contents)))
 			print ("\n------\n " + str(count) + " protein sequences successfully retrived! Protein sequences are saved in " \
 			+ file_name +".nuc.fa \n" )
 
+			spe = list(set(re.findall('\[.*?\]',file_contents)))
+			genus = list(set(re.findall('\[\w*',file_contents)))
 			if len(spe) >1:
-				print("\n Sequences are from " + str(len(spe)) + " different species. Do you really wish to continue? \n")
+				print("\n Sequences are from " + str(len(genus))+ " different genera and there are " + str(len(spe)) + " different species in total. Do you wish to continue? \n")
 				answer = input(" yes or no?")
 				if yes_no(answer):
+					print("To access the sequence similarity")
+				# sort the sequencs by species and output into different files
 					lines = open(file_name + ".nuc.fa").readlines()
 					for line in lines:
 						for i in range(len(spe)):
 							if spe[i] in line:
 								acc = str(re.findall("^>\w*..",line)).strip("['>']")
 								files = ''.join(a for a in spe[i] if a.isalnum())
-								shell = "seqkit grep -r -p " + acc +" " + file_name + ".nuc.fa >>" + files + ".fa"
-								subprocess.call(shell, shell=True)
-						
-				elif yes_no(answer)==False:
+								sort = "seqkit grep -r -p " + acc +" " + file_name + ".nuc.fa >>" + files + ".fasta"
+								subprocess.call(sort, shell=True)
+				# multiple alignment within species by clustalo	
+					for i in range(len(spe)):
+						files = ''.join(a for a in spe[i] if a.isalnum())
+						align = "clustalo -i "+ files + ".fasta -o " + files + ".align.fasta"
+						subprocess.call(align, shell=True)	
+						plot = "plotcon -winsize 4 -graph svg -gsubtitle=\"" + files + " " + files + ".align.fasta"
+						subprocess.call(plot,shell=True)  
+				else:
 					print("Thank you! Bye!")
 					quit()
 			else:
