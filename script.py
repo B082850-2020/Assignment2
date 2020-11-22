@@ -79,7 +79,7 @@ def search(protein,taxon,partial) :
 			print ("\n------\n Check completed." + str(count) + " protein sequences were successfully retrieved! Protein sequences are saved in " \
 			+ file_name +".nuc.fa \n" )
 			
-			# count unique species number
+			# count unique species number, using regex to find all the text with [] around
 			spe = list(set(re.findall('\[.*?\]',file_contents)))
 			genus = list(set(re.findall('\[\w*',file_contents)))
 			# if more than one species in the downloaded file do following
@@ -92,14 +92,16 @@ def search(protein,taxon,partial) :
 					print("To access the sequence similarity")
 					# sort the sequences by species and output into different files
 					lines = open(file_name + ".nuc.fa").readlines()
-					for line in lines:
-						for i in range(len(spe)):
-							if spe[i] in line:
-								acc = str(re.findall("^>\w*..",line)).strip("['>']")
-								files = ''.join(a for a in spe[i] if a.isalnum())
+					for line in lines:		# loop over each line of the file
+						for i in range(len(spe)):		# loop for each unique species 	
+							if spe[i] in line:			# if line contains the species name
+								acc = str(re.findall("^>\w*..",line)).strip("['>']")	# use regex to find the accession in that line, convert it to string and strip special characters 
+								files = ''.join(a for a in spe[i] if a.isalnum())		# use the species name as output file name, strip off special characters
+								# shell command to pull sequence using the accession, append the sequence to the new file
 								sort = "seqkit grep -r -p " + acc +" " + file_name + ".nuc.fa >>" + files + ".fasta"
-								subprocess.call(sort, shell=True)
-				# multiple alignment within species by clustalo	and conservation plots by plotcon
+								subprocess.call(sort, shell=True)	# call the shell command
+								
+					# multiple alignment within species by clustalo	and conservation plots by plotcon
 					for i in range(len(spe)):
 						# species name without special characters
 						files = ''.join(a for a in spe[i] if a.isalnum())
