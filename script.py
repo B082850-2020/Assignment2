@@ -7,8 +7,8 @@ import re
 # user input will be put in a library 
 details={}
 details["Protein"]   = input("What protein do you want? ")
-details["Taxon"]    = input("What taxon for the protein? ")
-details["Partial"] = input ("Do you want to include partial proteins? yes or no ")
+details["Taxon"]    = input("Which taxonomic group do you want to search for? ")
+details["Partial"] = input ("Do you want to include partial proteins? Please answer yes or no ")
 
 # yes and no function which return true or false to use for conditions 
 def yes_no(answer):
@@ -41,44 +41,84 @@ def search(protein,taxon,partial) :
 	elif yes_no(partial):
 		# print search information of protein input and taxon input
 		print("\n Protein sequences searching for:\n\tProtein:",protein,"\n\tTaxon:",taxon,"\n\tPartial: Yes")
-		# output file name is based on user's taxon input
-		file_name = ''.join(i for i in taxon if i.isalnum())
+
 		# esearch in shell, taxon and protein as query  
 		es = "esearch -db protein -query \" "+ taxon +" AND "+ protein + " \" -sort \"Organism Name\" "
 		
-		# search result count after esearch
-		es_number = "esearch -db protein -query \" "+ taxon +" AND "+ protein + " \" "+ \
-        	"|grep -i \"count\"|awk \'{split($0,a,\"<|>\");print a[3];}\'"
+		# shell language to extract result count after doing esearch
+		es_number = es + "|grep -i \"count\"|awk \'{split($0,a,\"<|>\");print a[3];}\'"
 		
 		print("\n This is what I am going to run for you \n\n " + es + "\n\n Please wait... \n")
 		
-		# run es_number in shell to find search count and output is pulled as byte string
+		# run es_number in shell to find search count and output is pulled as a byte string
 		seq_number = subprocess.check_output(es_number,shell=True)
-		# convert byte string to integer and if sequence number is over 1000, script will end with warning message 
+		# convert byte string into integer and if sequence number is over 1000, script will end with a warning message 
 		if int(seq_number) > 1000:
 			print("\n ** Warning: Over 1000 sequences found, continue is not recommended, please narrow down your search,"+ \
 			"\n otherwise very slow processing speed and probably taking too much space! Thank you! \n")
 			quit()
-		# error trap, if no search result, error message with hint of spelling mistake 
+		# error trap, if no search result, error message with a hint of potential spelling mistake 
 		if int(seq_number) == 0:
 			print("\n Sorry, no sequence was found! Likely spelling mistakes. Please try again. Thank you! \n")
+			quit()
 		# otherwise carry on
 		else:
 			# print amount of the sequence found and start downloading 
-			print("\n------\n "+ str(seq_number.decode('ascii').rstrip()) +" sequences was found! Nice choice! \n\n Downloading sequences...\n\n Please wait... \n")
-			# download sequence with efetch and same in file_name based on user's taxon input
+			print("\n------\n "+ str(seq_number.decode('ascii').rstrip()) +" sequences was found! Nice choice! \n\n ")
+			dow = input(" Do you want to download the sequences on your server? (Please note: taxon name will be used as output file name.) Please respond yes or no.")
+			if yes_no(dow):
+				print("\n\n Downloading sequences...\n\n Please wait... \n")
+				# output file name is based on user's taxon input
+				file_name = ''.join(i for i in taxon if i.isalnum())
+				# download sequence with efetch and save sequances in file_name based on user's taxon input
+				ef = es + "|efetch -db protein -format fasta >"+ file_name +".nuc.fa"
+				# call download in shell
+				subprocess.call(ef,shell=True)
+				# open the downloaded file and and confirm protein sequence number by counting ">" 
+				print ("\n------\n Sequence downloaded! Checking " + file_name + ".nuc.fa content... \n")  
+				file_contents = open(file_name + ".nuc.fa").read()
+				count = file_contents.count('>')
+				# print confirmation message
+				print ("\n------\n Check completed." + str(count) + " protein sequences were successfully retrieved! Protein sequences are saved in " \
+				+ file_name +".nuc.fa \n" )
+			else:
+				print("Thank you for searching! Bye!")
+				quit()				
+
+	else:
+		print("\n Protein sequences searching for:\n\tProtein:",protein,"\n\tTaxon:",taxon,"\n\tPartial: No")
+		file_name = ''.join(i for i in taxon if i.isalnum())
+		es = "esearch -db protein -query \" "+ taxon +" AND "+ protein + "Not partial" + " \" " 
+		es_number = "esearch -db protein -query \" "+ taxon +" AND "+ protein + " Not partial" + " \" "+ \
+        	"|grep -i \"count\"|awk \'{split($0,a,\"<|>\");print a[3];}\'"
+		print("This is what I am going to run for you in a shell\n" + es)
+		subprocess.call(es,shell=True)
+		seq_number = subprocess.check_output(es_number,shell=True)
+		if int(seq_number) > 1000:
+			print("\n ** Warning: Over 1000 sequences found, continue is not recommended, please narrow down your search,"+ \
+			"\n otherwise very slow processing speed and probably taking too much space! Thank you! \n")
+			quit()
+		if int(seq_number) == 0:
+			print("\n Sorry, no sequence was found! Likely spelling mistakes. Please try again. Thank you! \n")
+		else:
 			ef = es + "|efetch -db protein -format fasta >"+ file_name +".nuc.fa"
-			# call download in shell
 			subprocess.call(ef,shell=True)
-			
-			# open the downloaded file and and confirm protein sequence number by searching ">"  
-			print ("\n------\n Sequence downloaded! Checking " + file_name + ".nuc.fa content... \n"  
 			file_contents = open(file_name + ".nuc.fa").read()
-			count = file_contents.count('>')
-			# print confirmation message
-			print ("\n------\n Check completed." + str(count) + " protein sequences were successfully retrieved! Protein sequences are saved in " \
-			+ file_name +".nuc.fa \n" )
-			
+			seq = file_contents.count('>')
+			if seq == 0:
+				print (" Something went wrong.. No sequence was retrieved. Did you put the right taxon name? ")
+			else:
+				print ("\n "+str(seq) +" protein sequences successfully retrieved! Protein sequences are saved in " \
+				+ file_name +".nuc.fa \n" )
+
+def analyse(protein,taxon,partial):
+		# to find the file generated by 'search' function
+		file_name = ''.join(i for i in taxon if i.isalnum())
+		import os.path
+		# only carry on if the file exists
+		if os.path.isfile(file_name + ".nuc.fa"):
+			# read downloaded sequences
+			file_contents = open(file_name + ".nuc.fa").read()
 			# count unique species number, using regex to find all the text with [] around
 			spe = list(set(re.findall('\[.*?\]',file_contents)))
 			genus = list(set(re.findall('\[\w*',file_contents)))
@@ -109,44 +149,20 @@ def search(protein,taxon,partial) :
 						align = "clustalo -i "+ files + ".fasta -o " + files + ".align.fasta"
 						subprocess.call(align, shell=True)
 						# conservation plots saved in .svg and subtitle uses species name	
-						plot = "plotcon -winsize 4 -graph svg -gsubtitle=\"" + files + " " + files + ".align.fasta"
+						plot = "plotcon -winsize 4 -graph svg -gdirectory ./plotcon -gsubtitle=\"" + files + " " + files + ".align.fasta"
 						subprocess.call(plot,shell=True)  
 				else:
 					print("Thank you! Bye!")
 					quit()
 			else:
 				quit()
-			
-
-	else:
-		print("\n Protein sequences searching for:\n\tProtein:",protein,"\n\tTaxon:",taxon,"\n\tPartial: No")
-		file_name = ''.join(i for i in taxon if i.isalnum())
-		es = "esearch -db protein -query \" "+ taxon +" AND "+ protein + "Not partial" + " \" " 
-		es_number = "esearch -db protein -query \" "+ taxon +" AND "+ protein + " Not partial" + " \" "+ \
-        	"|grep -i \"count\"|awk \'{split($0,a,\"<|>\");print a[3];}\'"
-		print("This is what I am going to run for you in a shell\n" + es)
-		subprocess.call(es,shell=True)
-		seq_number = subprocess.check_output(es_number,shell=True)
-		if int(seq_number) > 1000:
-			print("\n ** Warning: Over 1000 sequences found, continue is not recommended, please narrow down your search,"+ \
-			"\n otherwise very slow processing speed and probably taking too much space! Thank you! \n")
-			quit()
-		if int(seq_number) == 0:
-			print("\n Sorry, no sequence was found! Likely spelling mistakes. Please try again. Thank you! \n")
 		else:
-			ef = es + "|efetch -db protein -format fasta >"+ file_name +".nuc.fa"
-			subprocess.call(ef,shell=True)
-			file_contents = open(file_name + ".nuc.fa").read()
-			seq = file_contents.count('>')
-			if seq == 0:
-				print (" Something went wrong.. No sequence was retrieved. Did you put the right taxon name? ")
-			else:
-				print ("\n "+str(seq) +" protein sequences successfully retrieved! Protein sequences are saved in " \
-				+ file_name +".nuc.fa \n" )
+			print("\n\n Ummm, something is wrong. No downloaded file found. \n")		
 
-# call search function and pass multiple arguments from the details library as a list 
+# call 'search' function and pass multiple arguments from the 'details' library as a list 
 search(*list(details.values()))
- 
 
+# call 'analyse' function and pass multiple arguments from the 'details' library as a list 
+analyse(*list(details.values()))
 
 
