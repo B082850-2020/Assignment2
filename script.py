@@ -184,13 +184,17 @@ def similarity(protein,taxon,partial):
 						# print sorting job done message
 						print("\n Sequence sorting is done. Sequences for each species can now be found in fasta files under species names \n")  
 						direc = input("\n------\n Multiple plots will be generated after alignment, would you like to store all the plots in a new directory \".\plotcon\"? \n\n Please respond yes or no.") 
+						# if a new directory is wanted do fowllowing
 						if yes_no(direc):
-							try:
-								mkdir = "mkdir plotcon"
-								subprocess_checkout(mkdir,shell=True)
-							except:
+							try:	# try making a new directory 
+								mkdir = "mkdir plotcon"		# shell command to make a new directory called plotcon
+								subprocess_checkout(mkdir,shell=True)	# if making directory failed, try fails, except would proceed
+							except:	# if failed,do following
+								# print error message and ask user if want to continuew without a directory
 								conti = input("\n Seems like there was an error when making a new directorty. Do you wish to continue without a new directory? \n\n Please respond yes or no.") 
+								# if user wish to carry on do following
 								if yes_no(conti):
+									Print("\n Aligning sequences within species and plotting conservation for each of them. \n\n Please wait... \n")
 									# multiple alignment within species by clustalo	and conservation plots by plotcon
 									for i in range(len(spe)):
 										# species name without special characters
@@ -199,17 +203,21 @@ def similarity(protein,taxon,partial):
 										within_align = "clustalo -i "+ files + ".fasta -o " + files + ".align.fasta --output-order=tree-order"
 										subprocess.call(within_align, shell=True)
 										# conservation plots saved in .svg and subtitle uses species name	
-										plot = "plotcon -winsize 4 -graph svg -gsubtitle=\"" + files + "\" " + files + ".align.fasta"
+										plot = "plotcon -winsize 4 -graph svg -gdirectory ./plotcon -gsubtitle=\"" + files + "\" " + files + ".align.fasta"
 										subprocess.call(plot,shell=True)
 										# shell command to rename each plot to prevent overwrite
 										rename = "mv plotcon.svg " + file_name + ".svg"
 										# call the rename shell command
 										subprocess.call(rename,shell=True)
-										print(" Alignments are done. Alignment within species sorted in tree order can be found in .align.fasta files")
-										print(" \n\n Conservation plot is ready in .svg files under species name \n")  
+									print(" Alignments are done. Alignment within species sorted in tree order can be found in .align.fasta files")
+									print(" \n\n Conservation plot is ready in .svg files under species name \n")  
+								# if user do not want to continue
 								else:
-									print("Thank you! Bye")
+									print(" Sorry to hear that you do now want to continue! Have a nice day. Bye. \n")
+									quit()
+						# carry on without a new directory
 						else:
+							Print("\n Aligning sequences within species and plotting conservation for each of them. \n\n Please wait... \n")
 							# multiple alignment within species by clustalo	and conservation plots by plotcon
 							for i in range(len(spe)):
 								# species name without special characters
@@ -260,15 +268,18 @@ def similarity(protein,taxon,partial):
 						
 						# if user do not want any of the above analysing methods
 						else:
-							print("\n\n Sorry no other similarity test can be carried out. \n")
+							print("\n\n Sorry, no other similarity test is available. \n")
+							quit()
 				# quit if do not want to continue with multiple species
 				else:
 					print("Thank you! Bye!")
 					quit()
+			
 			# if there is only one species among the downloaded sequences do following
 			else:
 				# confirming user want to proceed with similarity analysis
 				single = input("\n\n All downloaded sequences belong to one species. Do you want to proceed with aligning sequences and plotting a conservation plot base on these sequences? \n")
+				# if user wish to continue
 				if yes_no(single):
 					# species name without special characters
 					species_file = ''.join(a for a in spe[0] if a.isalnum())
@@ -288,8 +299,6 @@ def similarity(protein,taxon,partial):
 					print("Thank you! Bye!")
 					quit()
 				
-		else:
-			print("\n\n Ummm, something is wrong. No downloaded file found. \n")		
 
 # call 'search' function and pass multiple arguments from the 'details' library to the function as a list 
 search(*list(details.values()))
