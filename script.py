@@ -150,7 +150,6 @@ def similarity(protein,taxon,partial):
 		import os.path
 		# only carry on if the file exists
 		if os.path.isfile(file_name + ".nuc.fa"):
-			print(file_name + ".nuc.fa")
 			# read downloaded sequences
 			file_contents = open(file_name + ".nuc.fa").read()
 			# count unique species number, using regex to find all the text with [] around
@@ -171,7 +170,7 @@ def similarity(protein,taxon,partial):
 					# only proceed this part if user answer is True
 					if yes_no(within):
 						# print sorting message
-						print("\n------\n Start sorting sequences by species... Sequences of same species will be put into a new separate file")	
+						print("\n------\n Start sorting sequences by species... Sequences of same species will be put into a new separate file \n")	
 						# sort the sequences by species and output into different files
 						lines = open(file_name + ".nuc.fa").readlines()
 						for line in lines:		# loop over each line of the file
@@ -183,25 +182,50 @@ def similarity(protein,taxon,partial):
 									sort = "seqkit grep -r -p " + acc +" " + file_name + ".nuc.fa >>" + files + ".fasta"
 									subprocess.call(sort, shell=True)	# call the shell command
 						# print sorting job done message
-						print("\n Sequence sorting is done. Sequences for each species can now be found in fasta files named by species names")  
-		
-						# multiple alignment within species by clustalo	and conservation plots by plotcon
-						for i in range(len(spe)):
-							# species name without special characters
-							files = ''.join(a for a in spe[i] if a.isalnum())
-							# alignment within species, output in tree-order, more closely related sequence are at the bottom of the file
-							within_align = "clustalo -i "+ files + ".fasta -o " + files + ".align.fasta --output-order=tree-order"
-							subprocess.call(within_align, shell=True)
-							# conservation plots saved in .svg and subtitle uses species name	
-							plot = "plotcon -winsize 4 -graph svg -gdirectory ./plotcon -gsubtitle=\"" + files + "\" " + files + ".align.fasta"
-							subprocess.call(plot,shell=True)
-							# shell command to rename each plot to prevent overwrite
-							rename = "mv plotcon.svg " + file_name + ".svg"
-							# call the rename shell command
-							subprocess.call(rename,shell=True) 
-							print(" \n\n Conservation plot is ready in .svg files under species name \n")   
-						print(" Alignments are done. Alignment within species sorted in tree order can be found in .align.fasta files")
-						
+						print("\n Sequence sorting is done. Sequences for each species can now be found in fasta files under species names \n")  
+						direc = input("\n------\n Multiple plots will be generated after alignment, would you like to store all the plots in a new directory \".\plotcon\"? \n\n Please respond yes or no.") 
+						if yes_no(direc):
+							try:
+								mkdir = "mkdir plotcon"
+								subprocess_checkout(mkdir,shell=True)
+							except:
+								conti = input("\n Seems like there was an error when making a new directorty. Do you wish to continue without a new directory? \n\n Please respond yes or no.") 
+								if yes_no(conti):
+									# multiple alignment within species by clustalo	and conservation plots by plotcon
+									for i in range(len(spe)):
+										# species name without special characters
+										files = ''.join(a for a in spe[i] if a.isalnum())
+										# alignment within species, output in tree-order, more closely related sequence are at the bottom of the file
+										within_align = "clustalo -i "+ files + ".fasta -o " + files + ".align.fasta --output-order=tree-order"
+										subprocess.call(within_align, shell=True)
+										# conservation plots saved in .svg and subtitle uses species name	
+										plot = "plotcon -winsize 4 -graph svg -gsubtitle=\"" + files + "\" " + files + ".align.fasta"
+										subprocess.call(plot,shell=True)
+										# shell command to rename each plot to prevent overwrite
+										rename = "mv plotcon.svg " + file_name + ".svg"
+										# call the rename shell command
+										subprocess.call(rename,shell=True)
+										print(" Alignments are done. Alignment within species sorted in tree order can be found in .align.fasta files")
+										print(" \n\n Conservation plot is ready in .svg files under species name \n")  
+								else:
+									print("Thank you! Bye")
+						else:
+							# multiple alignment within species by clustalo	and conservation plots by plotcon
+							for i in range(len(spe)):
+								# species name without special characters
+								files = ''.join(a for a in spe[i] if a.isalnum())
+								# alignment within species, output in tree-order, more closely related sequence are at the bottom of the file
+								within_align = "clustalo -i "+ files + ".fasta -o " + files + ".align.fasta --output-order=tree-order"
+								subprocess.call(within_align, shell=True)
+								# conservation plots saved in .svg and subtitle uses species name	
+								plot = "plotcon -winsize 4 -graph svg -gsubtitle=\"" + files + "\" " + files + ".align.fasta"
+								subprocess.call(plot,shell=True)
+								# shell command to rename each plot to prevent overwrite
+								rename = "mv plotcon.svg " + file_name + ".svg"
+								# call the rename shell command
+								subprocess.call(rename,shell=True)	 
+							print(" Alignments are done. Alignment within species sorted in tree order can be found in .align.fasta files")
+							print(" \n\n Conservation plot is ready in .svg files under species name \n")  
 						
 					# if user do not want within species similarity, ask if user wants conservation across the species 
 					else:
@@ -252,7 +276,7 @@ def similarity(protein,taxon,partial):
 					single_align = "clustalo -i "+ species_file + ".fasta -o " + species_file + ".align.fasta --output-order=tree-order"
 					subprocess.call(within_align, shell=True)
 					# conservation plots saved in .svg and subtitle uses species name	
-					single_plot = "plotcon -winsize 4 -graph svg -gdirectory ./plotcon -gsubtitle=\"" + species_file + "\" " + species_file + ".align.fasta"
+					single_plot = "plotcon -winsize 4 -graph svg -gsubtitle=\"" + species_file + "\" " + species_file + ".align.fasta"
 					subprocess.call(single_plot,shell=True)
 					# shell command to rename each plot to prevent overwrite
 					single_rename = "mv plotcon.svg " + file_name + ".svg"
