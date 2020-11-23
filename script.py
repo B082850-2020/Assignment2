@@ -66,10 +66,10 @@ def search(protein,taxon,partial) :
 			print("\n------\n "+ str(seq_number.decode('ascii').rstrip()) +" sequences was found! Nice choice! \n\n")
 			
 			# provide choices for user by ask if they want to download the sequences or not
-			dow = input(" Do you want to download the sequences on your server?(Please note: taxon name will be used as output file name.) \n\n Protein sequence analysis will only be  available if sequences are downloaded. \n If your changed your mind about your search, you can reply no and start over again.\n\n Please respond yes or no.")
+			dow = input(" Do you want to download the sequences on your server? (Please note: taxon name will be used as output file name.) \n\n Protein sequence analysis will only be available if sequences are downloaded. \n\n If your changed your mind about your search, you can reply no and start over again.\n\n Please respond yes or no. ")
 			# starting downloading if response is yes
 			if yes_no(dow):
-				print("\n\n Downloading sequences...\n\n Please wait... \n")
+				print("\n------\n Downloading sequences...\n\n Please wait... \n")
 				# output file name is based on user's taxon input
 				file_name = ''.join(i for i in taxon if i.isalnum())
 				# download sequence with efetch and save sequances in file_name based on user's taxon input
@@ -79,11 +79,11 @@ def search(protein,taxon,partial) :
 				# call download in shell
 				subprocess.call(ef,shell=True)
 				# open the downloaded file and and confirm protein sequence number by counting ">" 
-				print ("\n------\n Sequence downloaded! Checking " + file_name + ".nuc.fa content... \n")  
+				print ("\n------\n Sequence downloaded! Checking " + file_name + ".nuc.fa for content... \n")  
 				file_contents = open(file_name + ".nuc.fa").read()
 				count = file_contents.count('>')
 				# print confirmation message
-				print ("\n------\n Check completed." + str(count) + " protein sequences were successfully retrieved! Protein sequences are saved in " \
+				print ("\n------\n Check completed. " + str(count) + " protein sequences were successfully retrieved! Protein sequences are saved in " \
 				+ file_name +".nuc.fa \n" )
 			# if user do not want to continue downloading sequences, quit the script
 			else:
@@ -118,10 +118,10 @@ def search(protein,taxon,partial) :
 			print("\n------\n "+ str(seq_number.decode('ascii').rstrip()) +" sequences was found! Nice choice! \n\n")
 			
 			# provide choices for user by ask if they want to download the sequences or not			
-			dow = input(" Do you want to download the sequences on your server?(Please note: taxon name will be used as output file name.) \n\n Protein sequence analysis will only be  available if sequences are downloaded. \n If your changed your mind about your search, you can reply no and start over again.\n\n Please respond yes or no.")
+			dow = input(" Do you want to download the sequences on your server? (Please note: taxon name will be used as output file name.) \n\n Protein sequence analysis will only be available if sequences are downloaded. \n\n If your changed your mind about your search, you can reply no and start over again.\n\n Please respond yes or no. ")
 			# starting downloading if response is yes
 			if yes_no(dow):
-				print("\n\n Downloading sequences...\n\n Please wait... \n")
+				print("\n------\n Downloading sequences...\n\n Please wait... \n")
 				# output file name is based on user's taxon input
 				file_name = ''.join(i for i in taxon if i.isalnum())
 				# download sequence with efetch and save sequences in file_name based on user's taxon input
@@ -131,11 +131,11 @@ def search(protein,taxon,partial) :
 				# call download in shell
 				subprocess.call(ef,shell=True)
 				# open the downloaded file and and confirm protein sequence number by counting ">" 
-				print ("\n------\n Sequence downloaded! Checking " + file_name + ".nuc.fa content... \n")  
+				print ("\n------\n Sequence downloaded! Checking " + file_name + ".nuc.fa for content... \n")  
 				file_contents = open(file_name + ".nuc.fa").read()
 				count = file_contents.count('>')
 				# print confirmation message
-				print ("\n------\n Check completed." + str(count) + " protein sequences were successfully retrieved! Protein sequences are saved in " \
+				print ("\n------\n Check completed. " + str(count) + " protein sequences were successfully retrieved! Protein sequences are saved in " \
 				+ file_name +".nuc.fa \n" )
 			# if user do not want to continue downloading sequences, quit the script
 			else:
@@ -278,19 +278,19 @@ def similarity(protein,taxon,partial):
 			# if there is only one species among the downloaded sequences do following
 			else:
 				# confirming user want to proceed with similarity analysis
-				single = input("\n\n All downloaded sequences belong to one species. Do you want to proceed with aligning sequences and plotting a conservation plot base on these sequences? \n")
+				single = input("\n\n All downloaded sequences belong to one species. \n\n Do you want to proceed with aligning sequences and plotting a conservation plot base on these sequences? \n\n Please respond yes or no. ")
 				# if user wish to continue
 				if yes_no(single):
 					# species name without special characters
 					species_file = ''.join(a for a in spe[0] if a.isalnum())
 					# alignment within species, output in tree-order, more closely related sequence are at the bottom of the file
-					single_align = "clustalo -i "+ species_file + ".fasta -o " + species_file + ".align.fasta --output-order=tree-order"
-					subprocess.call(within_align, shell=True)
+					single_align = "clustalo -i "+ file_name + ".nuc.fa -o " + species_file + ".align.fasta --output-order=tree-order"
+					subprocess.call(single_align, shell=True)
 					# conservation plots saved in .svg and subtitle uses species name	
 					single_plot = "plotcon -winsize 4 -graph svg -gsubtitle=\"" + species_file + "\" " + species_file + ".align.fasta"
 					subprocess.call(single_plot,shell=True)
 					# shell command to rename each plot to prevent overwrite
-					single_rename = "mv plotcon.svg " + file_name + ".svg"
+					single_rename = "mv plotcon.svg " + species_file + ".svg"
 					# call the rename shell command
 					subprocess.call(single_rename,shell=True) 
 					print(" \n\n Conservation plot is ready in .svg file under species name \n")   
