@@ -202,6 +202,7 @@ def similarity(protein,taxon,partial):
 							print(" \n\n Conservation plot is ready in .svg files under species name \n")   
 						print(" Alignments are done. Alignment within species sorted in tree order can be found in .align.fasta files")
 						
+						
 					# if user do not want within species similarity, ask if user wants conservation across the species 
 					else:
 						Between = input("\n\n Do you wish to assess the conservation between all the species? Note: maximum 250 sequences can be processed this way. \n\n Please respond yes or no.")
@@ -212,8 +213,8 @@ def similarity(protein,taxon,partial):
 							between_align = "clustalo -i "+ file_name + ".nuc.fa -o " + file_name + ".align.nuc.fa --output-order=tree-order --maxnumseq=250"
 							# try to align the sequences, if error occurs, print error message
 							try:
-								subprocess.call(align,shell=True)	# try call the shell command align in python
-								print(subprocess.check_output(align,shell=True))	# when this command fail, try fail and error message will show up
+								subprocess.call(between_align,shell=True)	# try call the shell command align in python
+								print(subprocess.check_output(between_align,shell=True))	# when this command fail, try fail and error message will show up
 							except:
 								print("\n\n Sorry, error occured when trying to align the sequences! Did you have more than 250 sequences? \n") # error trap
 							# only carry on if alignments are successfully written in file
@@ -227,15 +228,42 @@ def similarity(protein,taxon,partial):
 									# call the shell command all_plot in python
 									subprocess.call(all_plot,shell=True)
 									# shell command to rename each plot to prevent overwrite
-									rename = "mv plotcon.svg " + file_name + ".svg"
+									all_rename = "mv plotcon.svg " + file_name + ".svg"
 									# call the rename shell command
-									subprocess.call(rename,shell=True) 
-									print(" \n\n Conservation plot is ready in .svg files under species name \n")
+									subprocess.call(all_rename,shell=True)
+									# print plotting job donw message 
+									print(" \n\n Conservation plot is now ready in .svg file under taxon name \n")
+						
+						# if user do not want any of the above analysing methods
+						else:
+							print("\n\n Sorry no other similarity test can be carried out. \n")
+				# quit if do not want to continue with multiple species
 				else:
 					print("Thank you! Bye!")
 					quit()
+			# if there is only one species among the downloaded sequences do following
 			else:
-				quit()
+				# confirming user want to proceed with similarity analysis
+				single = input("\n\n All downloaded sequences belong to one species. Do you want to proceed with aligning sequences and plotting a conservation plot base on these sequences? \n")
+				if yes_no(single):
+					# species name without special characters
+					species_file = ''.join(a for a in spe[0] if a.isalnum())
+					# alignment within species, output in tree-order, more closely related sequence are at the bottom of the file
+					single_align = "clustalo -i "+ species_file + ".fasta -o " + species_file + ".align.fasta --output-order=tree-order"
+					subprocess.call(within_align, shell=True)
+					# conservation plots saved in .svg and subtitle uses species name	
+					single_plot = "plotcon -winsize 4 -graph svg -gdirectory ./plotcon -gsubtitle=\"" + species_file + "\" " + species_file + ".align.fasta"
+					subprocess.call(single_plot,shell=True)
+					# shell command to rename each plot to prevent overwrite
+					single_rename = "mv plotcon.svg " + file_name + ".svg"
+					# call the rename shell command
+					subprocess.call(single_rename,shell=True) 
+					print(" \n\n Conservation plot is ready in .svg file under species name \n")   
+				# if user do not want to proceed with analysis, print the message and quit the script
+				else:
+					print("Thank you! Bye!")
+					quit()
+				
 		else:
 			print("\n\n Ummm, something is wrong. No downloaded file found. \n")		
 
