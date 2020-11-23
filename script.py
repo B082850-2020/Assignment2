@@ -10,16 +10,16 @@ details["Protein"]   = input(" What protein do you want to search for? ")
 details["Taxon"]    = input(" Which taxonomic group do you want to search for? ")
 details["Partial"] = input (" Do you want to include partial proteins? Please answer yes or no ")
 
-# yes and no function which return true or false to use for conditions 
+# yes and no function which return True or False to use for conditions 
 def yes_no(answer):
-	yes = set(['yes','y'])		# both yes or y will return true
-	no = set(['no','n']) 		# both no or n will return true
+	yes = set(['yes','y'])		# both yes or y will return True
+	no = set(['no','n']) 		# both no or n will return False
 	choice = answer.lower()		# set all types of answer to lower case
 	# loop forever until something is returned
 	while True:		
-		if choice in yes:		# both yes or y will return true
+		if choice in yes:		# both yes or y will return True
 			return True
-		elif choice in no:		# both no or n will return true
+		elif choice in no:		# both no or n will return False
 			return False
 		else:					# error trap, all other input will cause the function to ask "yes or no" over and over until a desired answer is received
 			print ("\n Please respond with 'yes' or 'no' \n")
@@ -38,7 +38,7 @@ def search(protein,taxon,partial) :
         	print("\n Sorry, no taxon was chosen, please try again..\n")
     
     # call yes_no function to evaluate if user want to include partial proteins or not
-    # only carry on this part if it is true     	
+    # only carry on this part if it is True     	
 	elif yes_no(partial):
 		# print search information of protein input and taxon input
 		print("\n Protein sequences searching for:\n\tProtein:",protein,"\n\tTaxon:",taxon,"\n\tPartial: Yes")
@@ -91,7 +91,7 @@ def search(protein,taxon,partial) :
 				quit()				
 	
 	# all the same as above but searching with 'no partial' as additional query keyword 
-	# only proceed from here if yes_no(partial) returns false
+	# only proceed from here if yes_no(partial) returns False
 	else:
 		print("\n Protein sequences searching for:\n\tProtein:",protein,"\n\tTaxon:",taxon,"\n\tPartial: No")
 		file_name = ''.join(i for i in taxon if i.isalnum())
@@ -150,6 +150,7 @@ def similarity(protein,taxon,partial):
 		import os.path
 		# only carry on if the file exists
 		if os.path.isfile(file_name + ".nuc.fa"):
+			print(file_name + ".nuc.fa")
 			# read downloaded sequences
 			file_contents = open(file_name + ".nuc.fa").read()
 			# count unique species number, using regex to find all the text with [] around
@@ -161,11 +162,15 @@ def similarity(protein,taxon,partial):
 				#print species count and ask if user want to continue or not
 				print("\n Sequences are from " + str(len(genus))+ " different genera and there are " + str(len(spe)) + " different species in total. Do you wish to continue? \n")
 				answer = input(" yes or no?")
-				# only if user answers is true do following
+				# only if user answers is True do following
 				if yes_no(answer):
+					# print information about following steps
 					print("\n------\n Sequence similarity can established either within species or between species (max 250 sequences), optional conservation plots can be done accordingly \n")
-					within = input("\n\n Do you wish to assess the conservation within each species? \n\n Alignment will be done for each species and conservation plot is available for each alignmnet. \n\n Please respond yes or no.")	
+					# ask user if within sequence conservation is desired
+					within = input("\n\n Do you wish to assess the conservation within each species? \n\n Alignment will be done for each species and conservation plot will be available for each alignmnet. \n\n Please respond yes or no.")	
+					# only proceed this part if user answer is True
 					if yes_no(within):
+						# print sorting message
 						print("\n------\n Start sorting sequences by species... Sequences of same species will be put into a new separate file")	
 						# sort the sequences by species and output into different files
 						lines = open(file_name + ".nuc.fa").readlines()
@@ -177,6 +182,7 @@ def similarity(protein,taxon,partial):
 									# shell command to pull sequence using the accession, append the sequence to the new file
 									sort = "seqkit grep -r -p " + acc +" " + file_name + ".nuc.fa >>" + files + ".fasta"
 									subprocess.call(sort, shell=True)	# call the shell command
+						# print sorting job done message
 						print("\n Sequence sorting is done. Sequences for each species can now be found in fasta files named by species names")  
 		
 						# multiple alignment within species by clustalo	and conservation plots by plotcon
@@ -189,21 +195,29 @@ def similarity(protein,taxon,partial):
 							# conservation plots saved in .svg and subtitle uses species name	
 							plot = "plotcon -winsize 4 -graph svg -gdirectory ./plotcon -gsubtitle=\"" + files + "\" " + files + ".align.fasta"
 							subprocess.call(plot,shell=True)
-						print(" Alignments are done. Alignment within species can be found in .align.fasta files")   
+						print(" Alignments are done. Alignment within species sorted in tree order can be found in .align.fasta files")   
 					
+					# if user do not want within species similarity, ask if user wants conservation across the species 
 					else:
 						Between = input("\n\n Do you wish to assess the conservation between all the species? Note: maximum 250 sequences can be processed this way. \n\n Please respond yes or no.")
+						# carry on if user response is True
 						if yes_no(between):
 							print("\n------\n Trying to align sequences... Please wait... \n")
+							# shell command to align the sequences across species and output 
 							between_align = "clustalo -i "+ file_name + ".nuc.fa -o " + file_name + ".align.nuc.fa --output-order=tree-order --maxnumseq=250"
+							# try to align the sequences, if error occurs, print error message
 							try:
-								subprocess.call(align,shell=True)
-								print(subprocess.check_output(align,shell=True))
+								subprocess.call(align,shell=True)	# try call the shell command align in python
+								print(subprocess.check_output(align,shell=True))	# when this command fail, try fail and error message will show up
 							except:
-								print("\n\n Sorry, error occured when trying to align the sequences! Did you have more than 250 sequences? \n") 
+								print("\n\n Sorry, error occured when trying to align the sequences! Did you have more than 250 sequences? \n") # error trap
+							# only carry on if alignments are successfully written in file
 							if os.path.isfile(file_name + ".align.nuc.fa"):
-									print("\n\n Sequences aligned successfully! Alignments are stored in " + file_name + ".align.nuc.fa")
+									# if the file created, print alignment success message 
+									print("\n\n Sequences aligned successfully! Alignments are stored in " + file_name + ".align.nuc.fa and sorted in phylogenetic order")
+									# shell command to plot conservation plot 
 									all_plot = "plotcon -winsize 4 -graph svg -gsubtitle=\"" + file_name + "\" " + file_name + ".align.nuc.fa"
+									# call the shell command all_plot in python
 									subprocess.call(all_plot,shell=True)
 							
 				else:
