@@ -195,8 +195,13 @@ def similarity(protein,taxon,partial):
 							# conservation plots saved in .svg and subtitle uses species name	
 							plot = "plotcon -winsize 4 -graph svg -gdirectory ./plotcon -gsubtitle=\"" + files + "\" " + files + ".align.fasta"
 							subprocess.call(plot,shell=True)
-						print(" Alignments are done. Alignment within species sorted in tree order can be found in .align.fasta files")   
-					
+							# shell command to rename each plot to prevent overwrite
+							rename = "mv plotcon.svg " + file_name + ".svg"
+							# call the rename shell command
+							subprocess.call(rename,shell=True) 
+							print(" \n\n Conservation plot is ready in .svg files under species name \n")   
+						print(" Alignments are done. Alignment within species sorted in tree order can be found in .align.fasta files")
+						
 					# if user do not want within species similarity, ask if user wants conservation across the species 
 					else:
 						Between = input("\n\n Do you wish to assess the conservation between all the species? Note: maximum 250 sequences can be processed this way. \n\n Please respond yes or no.")
@@ -214,12 +219,18 @@ def similarity(protein,taxon,partial):
 							# only carry on if alignments are successfully written in file
 							if os.path.isfile(file_name + ".align.nuc.fa"):
 									# if the file created, print alignment success message 
-									print("\n\n Sequences aligned successfully! Alignments are stored in " + file_name + ".align.nuc.fa and sorted in phylogenetic order")
+									print("\n\n Sequences aligned successfully! Alignments are stored in " + file_name + ".align.nuc.fa and sorted in phylogenetic order \n")
+									# print plotting progress
+									print(" \n------\n Start plotting conservation plot based on the alignment. \n")
 									# shell command to plot conservation plot 
 									all_plot = "plotcon -winsize 4 -graph svg -gsubtitle=\"" + file_name + "\" " + file_name + ".align.nuc.fa"
 									# call the shell command all_plot in python
 									subprocess.call(all_plot,shell=True)
-							
+									# shell command to rename each plot to prevent overwrite
+									rename = "mv plotcon.svg " + file_name + ".svg"
+									# call the rename shell command
+									subprocess.call(rename,shell=True) 
+									print(" \n\n Conservation plot is ready in .svg files under species name \n")
 				else:
 					print("Thank you! Bye!")
 					quit()
