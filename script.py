@@ -196,16 +196,21 @@ def similarity(protein,taxon,partial):
 							for i in range(len(spe)):
 								# species name without special characters
 								files = ''.join(a for a in spe[i] if a.isalnum())
-								# alignment within species, output in tree-order, more closely related sequence are at the bottom of the file
-								within_align = "clustalo -i "+ files + ".fasta -o " + files + ".align.fasta --output-order=tree-order"
-								subprocess.call(within_align, shell=True)
-								# conservation plots saved in .svg and subtitle uses species name	
-								plot = "plotcon -winsize 4 -graph svg -gdirectory plotcon -gsubtitle=\"" + files + "\" " + files + ".align.fasta"
-								subprocess.call(plot,shell=True)
-								# shell command to rename each plot to prevent overwrite
-								rename = "mv plotcon/plotcon.svg plotcon/" + files + ".svg"
-								# call the rename shell command
-								subprocess.call(rename,shell=True)
+								# open the file and count sequence number inside
+								filt = open(files + ".fasta").read()
+								number = filt.count('>')
+								# only align file with more than one sequence
+								if int(number)>1:
+									# alignment within species, output in tree-order, more closely related sequence are at the bottom of the file
+									within_align = "clustalo -i "+ files + ".fasta -o " + files + ".align.fasta --output-order=tree-order"
+									subprocess.call(within_align, shell=True)
+									# conservation plots saved in .svg and subtitle uses species name	
+									plot = "plotcon -winsize 4 -graph svg -gdirectory plotcon -gsubtitle=\"" + files + "\" " + files + ".align.fasta"
+									subprocess.call(plot,shell=True)
+									# shell command to rename each plot to prevent overwrite
+									rename = "mv plotcon/plotcon.svg plotcon/" + files + ".svg"
+									# call the rename shell command
+									subprocess.call(rename,shell=True)
 							print("\n Alignments are done. Alignment within species sorted in tree order can be found in .align.fasta files")
 							print(" \n\n Conservation plot is ready in .svg files under species name. \n")  
 						except:	# if failed,do following
@@ -218,16 +223,21 @@ def similarity(protein,taxon,partial):
 								for i in range(len(spe)):
 									# species name without special characters
 									files = ''.join(a for a in spe[i] if a.isalnum())
-									# alignment within species, output in tree-order, more closely related sequence are at the bottom of the file
-									within_align = "clustalo -i "+ files + ".fasta -o " + files + ".align.fasta --output-order=tree-order"
-									subprocess.call(within_align, shell=True)
-									# conservation plots saved in .svg and subtitle uses species name	
-									plot = "plotcon -winsize 4 -graph svg -gsubtitle=\"" + files + "\" " + files + ".align.fasta"
-									subprocess.call(plot,shell=True)
-									# shell command to rename each plot to prevent overwrite
-									rename = "mv plotcon.svg " + files + ".svg"
-									# call the rename shell command
-									subprocess.call(rename,shell=True)
+									# open the file and count sequence number inside
+									filt = open(files + ".fasta").read()
+									number = filt.count('>')
+									# only align file with more than one sequence									
+									if int(number)>1:									
+										# alignment within species, output in tree-order, more closely related sequence are at the bottom of the file
+										within_align = "clustalo -i "+ files + ".fasta -o " + files + ".align.fasta --output-order=tree-order"
+										subprocess.call(within_align, shell=True)
+										# conservation plots saved in .svg and subtitle uses species name	
+										plot = "plotcon -winsize 4 -graph svg -gsubtitle=\"" + files + "\" " + files + ".align.fasta"
+										subprocess.call(plot,shell=True)
+										# shell command to rename each plot to prevent overwrite
+										rename = "mv plotcon.svg " + files + ".svg"
+										# call the rename shell command
+										subprocess.call(rename,shell=True)
 								print("\n Alignments are done. Alignment within species sorted in tree order can be found in .align.fasta files")
 								print(" \n\n Conservation plot is ready in .svg files under species name. \n")  
 							# if user do not want to continue
@@ -361,7 +371,7 @@ def motif(protein,taxon,partial):
 					except:
 						print("\n Bad file name found. No match with accesssion. Pass sequence.\n")		# error trap
 						pass
-			Print("\n Motif search done! All the patmatmotif output files can be found in" + file_name + ".nuc.fa.split \n")
+			print("\n Motif search done! All the patmatmotif output files can be found in" + file_name + ".nuc.fa.split \n")
 			# remove redundant element in the hit_list  
 			hit_list = list(dict.fromkeys(hit_list))
 			# if hit_list only have 1 element and it is 0, it means that no hit was found for any sequence
@@ -384,6 +394,7 @@ def profile(protein,taxon,partial):
 		# count unique species number, using regex to find all the text with [] around
 		spe = list(set(re.findall('\[.*?\]',file_contents)))
 		file_1 = ''.join(a for a in spe[0] if a.isalnum())
+		
 		# check the alignment file of first species exists
 		if os.path.isfile(file_1 + ".align.fasta"):
 			# print information about the analysis and provide choice to continue ot not 
@@ -392,17 +403,23 @@ def profile(protein,taxon,partial):
 			if yes_no(profile):
 				for i in range(len(spe)):	# loop over species number
 					files = ''.join(a for a in spe[i] if a.isalnum())
-					# shell command for creating prophecy file
-					prophecy = "prophecy -sequence " +  files + ".align.fasta -type G -datafile Epprofile -name mymatrix -open 3.0 -extension 0.3 -outfile " + files + ".prophecy"
-					subprocess.call(prophecy,shell=True)
-					# shell command for creating prophet file
-					prophet = "prophet -sequence " +  files + ".align.fasta  -infile " + files + ".prophecy -gapopen 1.0 -gapextend 1.0 -outfile " + files + ".prophet"
-					subprocess.call(prophet,shell=True)
+					# open the file and count sequence number inside
+					filt = open(files + ".fasta").read()
+					number = filt.count('>')
+					# only file with more than one sequence has alignment
+					if int(number)>1:					
+						# shell command for creating prophecy file
+						prophecy = "prophecy -sequence " +  files + ".align.fasta -type G -datafile Epprofile -name mymatrix -open 3.0 -extension 0.3 -outfile " + files + ".prophecy"
+						subprocess.call(prophecy,shell=True)
+						# shell command for creating prophet file
+						prophet = "prophet -sequence " +  files + ".align.fasta  -infile " + files + ".prophecy -gapopen 1.0 -gapextend 1.0 -outfile " + files + ".prophet"
+						subprocess.call(prophet,shell=True)
 				print("\n Profiles created! .prophet files can be found under sepecies name. \n")
 			# if user responds no, print message and end the script
 			else:
 				print("\n\n Thank you for using this programme! Bye! \n\n")
 				quit() 				  
+		
 		# check if alignment file exist for across species comparison 
 		if os.path.isfile(file_name + ".align.nuc.fa"):
 			# print information about the analysis and provide choice to continue ot not 
